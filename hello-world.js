@@ -34,9 +34,11 @@ function startup() {
     return;
   }
   var vertexShaderSource = `#version 300 es
-  in vec4 a_position;
+  in vec2 a_position;
+  uniform vec2 u_resolution;
   void main() {
-    gl_Position = a_position;
+    vec2 clipSpace = (a_position/u_resolution)* 2.0  - 1.0;
+    gl_Position = vec4(clipSpace, 0, 1);
   }
   `;
 
@@ -55,19 +57,22 @@ function startup() {
 
   //
   var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+  var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+
+  var vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+
   var positionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
   // three 2d points
   var positions = [
-    0, 0,
-    0, 0.5,
-    0.7, 0,
+    100, 100,
+    100, 200,
+    300, 100,
   ];
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-  var vao = gl.createVertexArray();
-  gl.bindVertexArray(vao);
   gl.enableVertexAttribArray(positionAttributeLocation);
 
   var size = 2;          // 2 components per iteration
@@ -81,7 +86,8 @@ function startup() {
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   gl.useProgram(program);
 
-  gl.bindVertexArray(vao);
+  gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+
   var primitiveType = gl.TRIANGLES;
   var offset = 0;
   var count = 3;
